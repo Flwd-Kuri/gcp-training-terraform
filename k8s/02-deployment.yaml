@@ -1,0 +1,74 @@
+# SQL_PRIVATE_IP_PLACEHOLDER: replace with `mlflow_db_private_ip` output
+# ARTIFACT_BUCKET_PLACEHOLDER: replace with `mlflow_artifact_bucket` output
+#
+# No GCS credentials appear anywhere in this file — the pod authenticates
+# to GCS via Workload Identity through the `mlflow` KSA (see
+# 01-serviceaccount.yaml). Only the Postgres password comes from a Secret,
+# because Cloud SQL password auth doesn't have a Workload-Identity-native
+# equivalent the way GCS does (Cloud SQL IAM database auth is the closer
+# equivalent — worth exploring as a follow-up once this works).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mlflow
+  namespace: mlflow
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mlflow
+  template:
+    metadata:
+      labels:
+        app: mlflow
+    spec:
+      serviceAccountName: mlflow
+      containers:
+        - name: mlflow
+          image: ghcr.io/mlflow/mlflow:v2.14.1
+          # The base image doesn't bundle the Postgres/GCS drivers MLflow
+          # needs at runtime, so we install them at container start. Fine
+          # for a learning setup; the natural next step once this is
+          # working is to bake these into a custom image so pod start
+          # isn't doing a pip install every time.
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              pip install --no-cache-dir psycopg2-binary google-cloud-storage gcsfs && \
+              mlflow server \
+                --backend-store-uri "postgresql://$(DB_USER):$(DB_PASSWORD)@SQL_PRIVATE_IP_PLACEHOLDER:5432/mlflow" \
+                --default-artifact-root "gs://ARTIFACT_BUCKET_PLACEHOLDER" \
+                --host 0.0.0.0 \
+                --port 5000
+          ports:
+            - containerPort: 5000
+          env:
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mlflow-db
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mlflow-db
+                  key: password
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 30
+            periodSeconds: 20
