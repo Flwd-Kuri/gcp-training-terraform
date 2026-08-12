@@ -19,6 +19,7 @@ data "google_project" "current" {
 }
 
 resource "google_billing_budget" "monthly" {
+  provider        = google.with_quota
   billing_account = var.billing_account_id
   display_name    = "${var.project_id} monthly budget"
 
