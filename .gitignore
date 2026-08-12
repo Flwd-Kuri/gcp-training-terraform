@@ -1,0 +1,19 @@
+# Local terraform state/cache — remote state lives in GCS, this is never committed
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+
+# Plan output files
+tfplan
+*.tfplan
+
+temp.sh
+# NOTE: terraform.tfvars is intentionally NOT ignored here.
+# Nothing in this repo's tfvars is a real secret — GCP auth for CI/CD is
+# handled via Workload Identity Federation, not a var value. If you add a
+# variable that IS sensitive later, split it into a separate
+# *.auto.tfvars file and ignore that specifically, rather than the whole
+# tfvars file.
