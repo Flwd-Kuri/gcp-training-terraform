@@ -104,6 +104,6 @@ resource "google_project_iam_member" "mlflow_sql_client" {
 # project's GKE fleet, is allowed to act as this Google SA."
 resource "google_service_account_iam_member" "mlflow_workload_identity_binding" {
   service_account_id = google_service_account.mlflow_workload.name
-  role                = "roles/iam.workloadIdentityUser"
-  member              = "serviceAccount:${var.project_id}.svc.id.goog[${var.mlflow_namespace}/${var.mlflow_ksa_name}]"
+  role               = "roles/iam.workloadIdentityUser"
+  member             = "serviceAccount:${var.project_id}.svc.id.goog[${var.mlflow_namespace}/${var.mlflow_ksa_name}]"
 }
