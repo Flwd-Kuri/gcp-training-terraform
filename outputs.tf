@@ -34,3 +34,9 @@ output "mlflow_artifact_bucket" {
   description = "GCS bucket name for MLflow artifacts (goes into k8s/02-deployment.yaml)."
   value       = google_storage_bucket.mlflow_artifacts.name
 }
+
+output "mlflow_db_password" {
+  description = "Generated password for the MLflow Postgres user (used by create-db-secret.sh)."
+  value       = random_password.mlflow_db_password.result
+  sensitive   = true
+}
