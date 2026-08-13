@@ -2,6 +2,28 @@
 # GCS for artifacts, and Workload Identity so the MLflow pod authenticates
 # to both without any downloaded key material.
 
+# --- Required APIs ---
+
+resource "google_project_service" "servicenetworking" {
+  service            = "servicenetworking.googleapis.com"
+  disable_on_destroy = false
+}
+
+resource "google_project_service" "sqladmin" {
+  service            = "sqladmin.googleapis.com"
+  disable_on_destroy = false
+}
+
+resource "google_project_service" "iam" {
+  service            = "iam.googleapis.com"
+  disable_on_destroy = false
+}
+
+resource "google_project_service" "storage" {
+  service            = "storage.googleapis.com"
+  disable_on_destroy = false
+}
+
 resource "random_password" "mlflow_db_password" {
   length  = 24
   special = false # keep it URL-safe; it goes into a Postgres connection string
@@ -23,6 +45,8 @@ resource "google_service_networking_connection" "private_vpc_connection" {
   network                 = google_compute_network.vpc.id
   service                 = "servicenetworking.googleapis.com"
   reserved_peering_ranges = [google_compute_global_address.private_ip_alloc.name]
+
+  depends_on = [google_project_service.servicenetworking]
 }
 
 # --- Cloud SQL (Postgres), private IP only, no public IP surface ---
@@ -32,7 +56,10 @@ resource "google_sql_database_instance" "mlflow_pg" {
   database_version = "POSTGRES_15"
   region           = var.region
 
-  depends_on = [google_service_networking_connection.private_vpc_connection]
+  depends_on = [
+    google_service_networking_connection.private_vpc_connection,
+    google_project_service.sqladmin,
+  ]
 
   settings {
     tier = var.sql_tier
@@ -75,6 +102,8 @@ resource "google_storage_bucket" "mlflow_artifacts" {
   versioning {
     enabled = true
   }
+
+  depends_on = [google_project_service.storage]
 }
 
 # --- Workload Identity: a Google service account with just the roles
