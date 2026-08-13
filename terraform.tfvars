@@ -12,3 +12,10 @@ pods_cidr     = "10.20.0.0/16"
 services_cidr = "10.30.0.0/20"
 
 gke_cluster_name = "mlops-autopilot"
+
+master_authorized_networks = [
+  {
+    cidr_block   = "109.136.71.48/32"
+    display_name = "personal"
+  },
+]

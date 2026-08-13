@@ -14,9 +14,11 @@ RUN curl -fsSL -o /tmp/gcloud.tar.gz \
     && /usr/local/google-cloud-sdk/install.sh \
       --quiet \
       --usage-reporting=false \
-      --path-update=false
+      --path-update=false \
+    && /usr/local/google-cloud-sdk/bin/gcloud components install kubectl gke-gcloud-auth-plugin --quiet
 
 ENV PATH="/usr/local/google-cloud-sdk/bin:${PATH}"
+ENV USE_GKE_GCLOUD_AUTH_PLUGIN=True
 
 WORKDIR /workspace
 
