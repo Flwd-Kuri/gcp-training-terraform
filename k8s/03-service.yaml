@@ -1,0 +1,15 @@
+# ClusterIP on purpose — MLflow isn't meant to be public. Reach it via
+# `kubectl port-forward` for now (see README); a LoadBalancer/Ingress with
+# auth in front is a deliberate later step, not a default.
+apiVersion: v1
+kind: Service
+metadata:
+  name: mlflow
+  namespace: mlflow
+spec:
+  type: ClusterIP
+  selector:
+    app: mlflow
+  ports:
+    - port: 5000
+      targetPort: 5000
