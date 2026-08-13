@@ -78,3 +78,11 @@ variable "mlflow_ksa_name" {
   type        = string
   default     = "mlflow"
 }
+
+variable "master_authorized_networks" {
+  description = "CIDRs allowed to reach the GKE control plane API server. Add your own IP in CIDR notation (e.g. 203.0.113.5/32)."
+  type = list(object({
+    cidr_block   = string
+    display_name = string
+  }))
+}

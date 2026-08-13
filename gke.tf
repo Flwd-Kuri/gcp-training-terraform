@@ -27,4 +27,14 @@ resource "google_container_cluster" "autopilot" {
   release_channel {
     channel = "REGULAR"
   }
+
+  master_authorized_networks_config {
+    dynamic "cidr_blocks" {
+      for_each = var.master_authorized_networks
+      content {
+        cidr_block   = cidr_blocks.value.cidr_block
+        display_name = cidr_blocks.value.display_name
+      }
+    }
+  }
 }
