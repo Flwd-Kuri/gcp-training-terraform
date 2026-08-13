@@ -60,3 +60,21 @@ variable "gke_cluster_name" {
   type        = string
   default     = "mlops-autopilot"
 }
+
+variable "sql_tier" {
+  description = "Cloud SQL machine tier for the MLflow Postgres instance."
+  type        = string
+  default     = "db-f1-micro"
+}
+
+variable "mlflow_namespace" {
+  description = "Kubernetes namespace where MLflow is deployed."
+  type        = string
+  default     = "mlflow"
+}
+
+variable "mlflow_ksa_name" {
+  description = "Kubernetes service account name used by the MLflow pod."
+  type        = string
+  default     = "mlflow"
+}
