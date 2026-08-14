@@ -167,15 +167,10 @@ terraform output mlflow_artifact_bucket      # -> k8s/02-deployment.yaml
 Replace `GSA_EMAIL_PLACEHOLDER`, `SQL_PRIVATE_IP_PLACEHOLDER`, and
 `ARTIFACT_BUCKET_PLACEHOLDER` in those two files with the real values.
 
-**4. Create the DB secret directly from Terraform state** (never written
-to a file, nothing to accidentally commit):
-```bash
-./k8s/create-db-secret.sh
-```
-
-**5. Apply the manifests**
+**4. Apply the manifests and Create the DB secret directly from Terraform state**
 ```bash
 kubectl apply -f k8s/00-namespace.yaml
+bash ./k8s/create-db-secret.sh
 kubectl apply -f k8s/01-serviceaccount.yaml
 kubectl apply -f k8s/02-deployment.yaml
 kubectl apply -f k8s/03-service.yaml
