@@ -1,3 +1,4 @@
+/*
 # MLflow's storage layer: Cloud SQL (Postgres) for the tracking backend,
 # GCS for artifacts, and Workload Identity so the MLflow pod authenticates
 # to both without any downloaded key material.
@@ -136,3 +137,4 @@ resource "google_service_account_iam_member" "mlflow_workload_identity_binding" 
   role               = "roles/iam.workloadIdentityUser"
   member             = "serviceAccount:${var.project_id}.svc.id.goog[${var.mlflow_namespace}/${var.mlflow_ksa_name}]"
 }
+*/

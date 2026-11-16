@@ -25,21 +25,18 @@ spec:
       serviceAccountName: mlflow
       containers:
         - name: mlflow
-          image: ghcr.io/mlflow/mlflow:v2.14.1
-          # The base image doesn't bundle the Postgres/GCS drivers MLflow
-          # needs at runtime, so we install them at container start. Fine
-          # for a learning setup; the natural next step once this is
-          # working is to bake these into a custom image so pod start
-          # isn't doing a pip install every time.
-          command: ["/bin/bash", "-c"]
+          image: europe-west1-docker.pkg.dev/project-778a4715-afd6-4c3d-aa4/mlflow/mlflow:v2.14.1
+          command: ["mlflow"]
           args:
-            - |
-              pip install --no-cache-dir psycopg2-binary google-cloud-storage gcsfs && \
-              mlflow server \
-                --backend-store-uri "postgresql://$(DB_USER):$(DB_PASSWORD)@10.188.0.3":5432/mlflow" \
-                --default-artifact-root "gs://project-778a4715-afd6-4c3d-aa4-mlflow-artifacts" \
-                --host 0.0.0.0 \
-                --port 5000
+            - server
+            - --backend-store-uri
+            - postgresql://$(DB_USER):$(DB_PASSWORD)@10.188.0.3:5432/mlflow
+            - --default-artifact-root
+            - gs://project-778a4715-afd6-4c3d-aa4-mlflow-artifacts
+            - --host
+            - "0.0.0.0"
+            - --port
+            - "5000"
           ports:
             - containerPort: 5000
           env:

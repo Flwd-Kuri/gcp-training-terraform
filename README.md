@@ -167,15 +167,10 @@ terraform output mlflow_artifact_bucket      # -> k8s/02-deployment.yaml
 Replace `GSA_EMAIL_PLACEHOLDER`, `SQL_PRIVATE_IP_PLACEHOLDER`, and
 `ARTIFACT_BUCKET_PLACEHOLDER` in those two files with the real values.
 
-**4. Create the DB secret directly from Terraform state** (never written
-to a file, nothing to accidentally commit):
-```bash
-./k8s/create-db-secret.sh
-```
-
-**5. Apply the manifests**
+**4. Apply the manifests and Create the DB secret directly from Terraform state**
 ```bash
 kubectl apply -f k8s/00-namespace.yaml
+bash ./k8s/create-db-secret.sh
 kubectl apply -f k8s/01-serviceaccount.yaml
 kubectl apply -f k8s/02-deployment.yaml
 kubectl apply -f k8s/03-service.yaml
@@ -196,11 +191,79 @@ apply`. Check with:
 kubectl -n mlflow logs deployment/mlflow
 ```
 
+## Step 5: IAP-protected HTTPS ingress
+
+Replaces the manual `port-forward` with a stable public URL protected by
+Google login. Only identities explicitly granted access can reach MLflow —
+no VPN, no passwords, full audit log.
+
+**Traffic path:**
+```
+Browser → static public IP → GCP HTTPS Load Balancer → IAP (Google login check)
+       → GKE Ingress → MLflow Service (NodePort) → pod
+```
+
+**Why NodePort?** GCP's HTTPS load balancer requires the Service to be
+`NodePort` (or use NEGs). `ClusterIP` is invisible to it.
+
+**Why nip.io?** Google-managed TLS certs require a real DNS name. `nip.io`
+is a free wildcard DNS service that maps `<ip>.nip.io` → `<ip>` with no
+domain ownership needed — ideal for learning.
+
+**IAP OAuth brand warning:** `google_iap_brand` can only be created once
+per project and **cannot be deleted**, even by `terraform destroy`. If you
+already have a brand, import it:
+```bash
+terraform import google_iap_brand.mlflow projects/<project_id>/brands/<brand_id>
+```
+
+**1. Apply the Terraform** (static IP, IAP OAuth client, IAM binding):
+```bash
+terraform apply
+```
+
+**2. Apply the BackendConfig and updated Service**
+
+The BackendConfig links the MLflow Service to IAP. The Service changes from
+`ClusterIP` to `NodePort` so the GCP load balancer can reach it:
+```bash
+kubectl apply -f k8s/03-service.yaml
+kubectl apply -f k8s/05-backendconfig.yaml
+```
+
+**3. Run the ingress setup script**
+
+Reads the nip.io domain and IAP credentials from Terraform state, creates
+the IAP Kubernetes Secret, and applies the managed cert and Ingress with
+the domain substituted in:
+```bash
+chmod +x k8s/setup-ingress.sh
+./k8s/setup-ingress.sh
+```
+
+**4. Wait for the TLS certificate to provision** (up to 15 minutes)
+
+Google needs to verify domain ownership via HTTP before issuing the cert.
+The load balancer must be up and the static IP must be resolving for this
+to complete:
+```bash
+kubectl -n mlflow describe managedcertificate mlflow-cert
+# Status should move from Provisioning → Active
+```
+
+**5. Open MLflow**
+```bash
+terraform output mlflow_domain   # prints your nip.io URL
+# open https://<ip>.nip.io — Google login prompt appears
+```
+
+Your account is granted access via `roles/iap.httpsResourceAccessor` bound
+to `var.budget_alert_emails[0]`. To grant additional users, add more
+`google_project_iam_member` resources in `mlflow-ingress.tf` or switch to
+a Google Group for easier management.
+
 ## Next steps (not in this repo yet)
 
-- Bake `psycopg2-binary` / `gcsfs` into a custom MLflow image instead of
-  installing them at pod start (this k8s manifest cuts that corner on
-  purpose, to keep the first pass simple)
 - Repackage `k8s/*.yaml` as a Helm chart — same objects, templated
 - ArgoCD install + app-of-apps pattern for GitOps-managed workloads
 - A second environment (e.g. `envs/prod`) once you're ready to split state

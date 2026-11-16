@@ -1,0 +1,26 @@
+# GKE Ingress — creates a GCP HTTPS load balancer wired to:
+#   - the static IP reserved by Terraform
+#   - the managed TLS cert (06-managedcert.yaml)
+#   - the MLflow Service (NodePort) with IAP via BackendConfig
+# The domain is filled in by k8s/setup-ingress.sh from the Terraform output.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mlflow
+  namespace: mlflow
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: mlflow-ingress-ip
+    networking.gke.io/managed-certificates: mlflow-cert
+    kubernetes.io/ingress.class: "gce"
+spec:
+  rules:
+    - host: MLFLOW_DOMAIN_PLACEHOLDER
+      http:
+        paths:
+          - path: /*
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: mlflow
+                port:
+                  number: 5000

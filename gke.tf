@@ -1,3 +1,4 @@
+/*
 # GKE Autopilot inside the custom VPC. Autopilot manages node
 # provisioning/scaling for you — see the conversation notes for why
 # that's the right tradeoff at this stage (workload-level objects,
@@ -38,3 +39,4 @@ resource "google_container_cluster" "autopilot" {
     }
   }
 }
+*/
