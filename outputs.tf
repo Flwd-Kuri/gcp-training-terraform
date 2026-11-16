@@ -1,3 +1,4 @@
+/*
 output "vpc_name" {
   value = google_compute_network.vpc.name
 }
@@ -40,3 +41,26 @@ output "mlflow_db_password" {
   value       = random_password.mlflow_db_password.result
   sensitive   = true
 }
+
+output "mlflow_static_ip" {
+  description = "Static public IP of the MLflow HTTPS load balancer."
+  value       = google_compute_global_address.mlflow_ip.address
+}
+
+output "mlflow_domain" {
+  description = "nip.io domain for MLflow (use this in your browser once the cert is provisioned)."
+  value       = local.mlflow_domain
+}
+
+output "mlflow_iap_client_id" {
+  description = "IAP OAuth client ID (used by k8s/setup-ingress.sh)."
+  value       = google_iap_client.mlflow.client_id
+  sensitive   = true
+}
+
+output "mlflow_iap_client_secret" {
+  description = "IAP OAuth client secret (used by k8s/setup-ingress.sh)."
+  value       = google_iap_client.mlflow.secret
+  sensitive   = true
+}
+*/

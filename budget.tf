@@ -1,3 +1,4 @@
+/*
 # Billing budget + alerts. This is the "don't get surprised by a $400
 # bill" guardrail — notifications only, it does not stop spend on its
 # own (that would need a separate Pub/Sub -> Cloud Function pattern to
@@ -48,3 +49,4 @@ resource "google_billing_budget" "monthly" {
     disable_default_iam_recipients = false
   }
 }
+*/

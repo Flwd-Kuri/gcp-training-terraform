@@ -1,0 +1,13 @@
+# BackendConfig tells the GCP HTTPS load balancer to enable IAP on the
+# MLflow backend. The oauth credentials come from the mlflow-iap-secret
+# Kubernetes Secret created by k8s/setup-ingress.sh.
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: mlflow-backend-config
+  namespace: mlflow
+spec:
+  iap:
+    enabled: true
+    oauthclientCredentials:
+      secretName: mlflow-iap-secret

@@ -1,3 +1,4 @@
+/*
 # Custom VPC — deliberately not using the "default" auto-mode network.
 # Auto-mode creates a subnet in every region with permissive default
 # firewall rules; a custom VPC keeps only what you actually use.
@@ -64,3 +65,4 @@ resource "google_compute_firewall" "allow_internal" {
 
   source_ranges = [var.subnet_cidr, var.pods_cidr, var.services_cidr]
 }
+*/

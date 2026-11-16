@@ -1,0 +1,11 @@
+# GCP-managed TLS certificate — Google provisions and renews it automatically.
+# The domain is filled in by k8s/setup-ingress.sh from the Terraform output.
+# Provisioning takes up to 15 minutes after the Ingress is created and DNS resolves.
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: mlflow-cert
+  namespace: mlflow
+spec:
+  domains:
+    - MLFLOW_DOMAIN_PLACEHOLDER

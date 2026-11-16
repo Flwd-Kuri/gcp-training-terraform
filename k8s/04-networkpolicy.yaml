@@ -1,0 +1,42 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mlflow
+  namespace: mlflow
+spec:
+  podSelector:
+    matchLabels:
+      app: mlflow
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # No rules: blocks all pod-to-pod ingress on port 5000.
+    # kubectl port-forward is not affected — it runs through the kubelet
+    # (node-level), which bypasses NetworkPolicy entirely.
+    # When you add an Ingress controller or a sidecar proxy later,
+    # add an explicit rule here to allow it.
+    []
+  egress:
+    # DNS — required for Cloud SQL hostname resolution and GCS API lookups
+    - ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+    # Cloud SQL private IP
+    - to:
+        - ipBlock:
+            cidr: 10.188.0.3/32
+      ports:
+        - port: 5432
+    # Google APIs (GCS artifact storage) — routed via Cloud NAT
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8     # block lateral movement to other private ranges
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+      ports:
+        - port: 443

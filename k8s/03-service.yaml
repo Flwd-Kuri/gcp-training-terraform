@@ -6,8 +6,11 @@ kind: Service
 metadata:
   name: mlflow
   namespace: mlflow
+  annotations:
+    # Links this Service to the BackendConfig that enables IAP
+    cloud.google.com/backend-config: '{"default": "mlflow-backend-config"}'
 spec:
-  type: ClusterIP
+  type: NodePort
   selector:
     app: mlflow
   ports:
