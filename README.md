@@ -57,7 +57,8 @@ gcloud iam service-accounts create terraform-runner \
 
 # Grant only what's needed for this repo's resources.
 # Start narrow and add roles as Terraform complains — don't grant Owner.
-for ROLE in roles/compute.networkAdmin roles/container.admin \
+for ROLE in roles/compute.networkAdmin roles/compute.securityAdmin \
+            roles/container.admin \
             roles/billing.costsManager roles/iam.serviceAccountUser \
             roles/cloudsql.admin roles/servicenetworking.networksAdmin \
             roles/storage.admin roles/iam.serviceAccountAdmin; do
@@ -81,6 +82,7 @@ gcloud projects add-iam-policy-binding "$PROJECT_ID" \
 
 **What the new roles cover, since each was a real error we hit building
 this incrementally:**
+- `roles/compute.securityAdmin` — creating and deleting firewall rules (`networkAdmin` intentionally excludes these)
 - `roles/cloudsql.admin` — creating the Postgres instance, database, user
 - `roles/servicenetworking.networksAdmin` — the private VPC peering Cloud SQL needs for a private IP
 - `roles/storage.admin` — creating the MLflow artifact **bucket** (distinct from `storage.objectAdmin`, which only lets you read/write objects *inside* an existing bucket)
