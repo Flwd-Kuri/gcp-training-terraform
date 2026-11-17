@@ -110,6 +110,15 @@ jobs:
             -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" \
             -backend-config="prefix=terraform/state"
 
+      # compute.securityAdmin is required to delete firewall rules but is not
+      # included in compute.networkAdmin. Grant it here so destroy can proceed
+      # without requiring a manual one-time bootstrap step.
+      - name: Ensure compute.securityAdmin on terraform-runner
+        run: |
+          gcloud projects add-iam-policy-binding ${{ secrets.GCP_PROJECT_ID }} \
+            --member="serviceAccount:${{ secrets.GCP_SERVICE_ACCOUNT }}" \
+            --role="roles/compute.securityAdmin"
+
       # google_service_networking_connection: cannot be deleted while Cloud
       # SQL's internal cleanup is still in progress. Remove from state and
       # delete via gcloud to avoid blocking the rest of the destroy.
