@@ -110,6 +110,21 @@ jobs:
             -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" \
             -backend-config="prefix=terraform/state"
 
+      # google_service_networking_connection: cannot be deleted while Cloud
+      # SQL's internal cleanup is still in progress. Remove from state and
+      # delete via gcloud to avoid blocking the rest of the destroy.
+      # google_iap_brand: immutable GCP resource, can never be deleted.
+      # Remove from state so Terraform does not attempt (and fail) to delete it.
+      - name: Remove undeletable resources from state
+        run: |
+          terraform state rm google_service_networking_connection.private_vpc_connection || true
+          terraform state rm google_iap_brand.mlflow || true
+          gcloud services vpc-peerings delete \
+            --service=servicenetworking.googleapis.com \
+            --network=mlops-vpc \
+            --project=${{ secrets.GCP_PROJECT_ID }} \
+            --force --quiet || true
+
       - name: Terraform Destroy
         run: |
           terraform destroy -auto-approve -input=false
